@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import { Quiz } from "./quiz.model";
 import { QuizAttempt } from "../quizAttempt/quizAttempt.model";
-import { GeminiService } from "../../services/gemini.service";
+import { GroqService } from "../../services/groq.service";
 import {
   IQuiz,
   IGenerateQuizRequest,
@@ -26,8 +26,8 @@ const generateQuiz = async (
   userId: string
 ): Promise<{ quizId: string }> => {
   try {
-    // Always use Gemini for quiz generation
-    const generatedQuestions = await GeminiService.geminiGenerateQuiz(request);
+    // Use Groq for quiz generation (free alternative to Gemini)
+    const generatedQuestions = await GroqService.groqGenerateQuiz(request);
 
     const quizData: ICreateQuizRequest = {
       title: `${request.subject} - ${request.topic} Quiz`,
@@ -35,7 +35,7 @@ const generateQuiz = async (
         request.topic
       } for ${
         request.academicLevel
-      } (Generated with GEMINI)`,
+      } (Generated with AI)`,
       subject: request.subject,
       topic: request.topic,
       academicLevel: request.academicLevel,

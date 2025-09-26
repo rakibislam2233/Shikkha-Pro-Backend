@@ -8,7 +8,7 @@ import {
 } from './question.interface';
 import ApiError from '../../errors/AppErro';
 import { IPaginateOptions, IPaginateResult } from '../../types/paginate';
-import { OpenAIService } from '../../services/openai.service';
+import { GroqService } from '../../services/groq.service';
 
 const createQuestion = async (
   questionData: ICreateQuestionRequest,
@@ -187,7 +187,7 @@ const generateQuestion = async (
   userId: string
 ): Promise<IQuestion> => {
   try {
-    const generatedQuestion = await OpenAIService.openAIGenerateSingleQuestion(
+    const generatedQuestion = await GroqService.groqGenerateSingleQuestion(
       subject,
       topic,
       academicLevel,
@@ -237,7 +237,7 @@ const improveQuestion = async (
   }
 
   try {
-    const improvedQuestion = await OpenAIService.openAIImproveQuestion(
+    const improvedQuestion = await GroqService.groqImproveQuestion(
       {
         id: question._id.toString(),
         question: question.question,

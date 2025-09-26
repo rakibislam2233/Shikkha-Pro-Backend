@@ -26,7 +26,7 @@ const myFormat = printf(
 
 // Base logger configuration
 const baseConfig = {
-  level: process.env.NODE_ENV === 'production' ? 'warn' : 'info',
+  level: 'info', // Always use info level for both development and production
   format: combine(
     label({ label: 'ShikkaPro-Website-Backend' }),
     timestamp(),
@@ -37,7 +37,7 @@ const baseConfig = {
 // Production-optimized transports
 const productionTransports = [
   new transports.Console({
-    level: 'error', // Only log errors to console in production
+    level: 'info', // Show info logs in console for production
   }),
   new DailyRotateFile({
     filename: path.join(

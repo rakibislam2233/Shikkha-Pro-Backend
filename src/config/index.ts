@@ -81,10 +81,10 @@ export const config = {
         )
       : ["http://localhost:5173", "https://shikkha-pro-client.vercel.app"],
   },
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY || "",
-  },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || "",
+  },
+  groq: {
+    apiKey: process.env.GROQ_API_KEY || "",
   },
 };

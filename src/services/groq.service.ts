@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import { config } from '../config';
 import {
   AcademicLevel,
@@ -11,17 +11,19 @@ import {
 import AppError from '../errors/AppErro';
 import { StatusCodes } from 'http-status-codes';
 
-let geminiClient: GoogleGenerativeAI | null = null;
+let groqClient: Groq | null = null;
 
-const initializeGemini = (): GoogleGenerativeAI => {
-  if (!geminiClient) {
-    if (!config.gemini?.apiKey) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Gemini API key is required');
+const initializeGroq = (): Groq => {
+  if (!groqClient) {
+    if (!config.groq?.apiKey) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Groq API key is required');
     }
 
-    geminiClient = new GoogleGenerativeAI(config.gemini.apiKey);
+    groqClient = new Groq({
+      apiKey: config.groq.apiKey,
+    });
   }
-  return geminiClient;
+  return groqClient;
 };
 
 const getSystemPrompt = (): string => {
@@ -213,58 +215,53 @@ const getRandomQuestionType = (): QuestionType => {
   return types[Math.floor(Math.random() * types.length)];
 };
 
-const geminiGenerateQuiz = async (
+const groqGenerateQuiz = async (
   request: IGenerateQuizRequest
 ): Promise<Question[]> => {
   try {
-    const genAI = initializeGemini();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+    const groq = initializeGroq();
 
     const systemPrompt = getSystemPrompt();
     const prompt = buildPrompt(request);
 
-    const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant', // Using Llama 3.1 8B model (faster and available)
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+      response_format: { type: 'json_object' },
+    });
 
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    const responseText = response.text();
+    const responseContent = completion.choices[0]?.message?.content;
 
-    console.log('Gemini Response: ', responseText);
-
-    if (!responseText) {
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'No response from Gemini');
+    if (!responseContent) {
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'No response from Groq');
     }
 
-    // Clean the response text to extract JSON
-    let cleanedResponse = responseText.trim();
-
-    // Remove markdown code blocks if present
-    if (cleanedResponse.startsWith('```json')) {
-      cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedResponse.startsWith('```')) {
-      cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-
-    const generatedData = JSON.parse(cleanedResponse);
+    const generatedData = JSON.parse(responseContent);
     return formatQuestions(generatedData.questions, request);
   } catch (error: any) {
-    console.error('Error generating quiz with Gemini:', error);
+    console.error('Error generating quiz with Groq:', error);
 
     // Better error messages based on the specific error
     if (error.message?.includes('429') || error.message?.includes('quota')) {
       throw new AppError(
         StatusCodes.TOO_MANY_REQUESTS,
-        'Gemini API quota exceeded. Please try again later or check your billing.'
+        'Groq API quota exceeded. Please try again later.'
       );
-    } else if (error.message?.includes('404')) {
+    } else if (error.message?.includes('401')) {
       throw new AppError(
         StatusCodes.INTERNAL_SERVER_ERROR,
-        'Gemini model not available. Please contact support.'
-      );
-    } else if (error.message?.includes('API key')) {
-      throw new AppError(
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        'Invalid Gemini API key configuration.'
+        'Invalid Groq API key configuration.'
       );
     }
 
@@ -275,7 +272,7 @@ const geminiGenerateQuiz = async (
   }
 };
 
-const geminiGenerateSingleQuestion = async (
+const groqGenerateSingleQuestion = async (
   subject: string,
   topic: string,
   academicLevel: AcademicLevel,
@@ -283,7 +280,7 @@ const geminiGenerateSingleQuestion = async (
   questionType: QuestionType,
   language: QuizLanguage = 'english'
 ): Promise<Question> => {
-  const questions = await geminiGenerateQuiz({
+  const questions = await groqGenerateQuiz({
     academicLevel,
     subject,
     topic,
@@ -296,13 +293,12 @@ const geminiGenerateSingleQuestion = async (
   return questions[0];
 };
 
-const geminiImproveQuestion = async (
+const groqImproveQuestion = async (
   question: Question,
   feedback: string
 ): Promise<Question> => {
   try {
-    const genAI = initializeGemini();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+    const groq = initializeGroq();
 
     const systemPrompt = getSystemPrompt();
     const prompt = `Improve the following quiz question based on the feedback provided:
@@ -314,45 +310,43 @@ Feedback: ${feedback}
 
 Please provide an improved version of the question maintaining the same structure and format.`;
 
-    const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.5,
+      max_tokens: 1000,
+      response_format: { type: 'json_object' },
+    });
 
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    const responseText = response.text();
+    const responseContent = completion.choices[0]?.message?.content;
 
-    if (!responseText) {
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'No response from Gemini');
+    if (!responseContent) {
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'No response from Groq');
     }
 
-    // Clean the response text to extract JSON
-    let cleanedResponse = responseText.trim();
-
-    // Remove markdown code blocks if present
-    if (cleanedResponse.startsWith('```json')) {
-      cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedResponse.startsWith('```')) {
-      cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-
-    const improvedData = JSON.parse(cleanedResponse);
+    const improvedData = JSON.parse(responseContent);
     return {
       ...question,
       ...improvedData.questions[0],
       id: question.id, // Keep original ID
     };
   } catch (error: any) {
-    console.error('Error improving question with Gemini:', error);
+    console.error('Error improving question with Groq:', error);
 
     // Better error messages based on the specific error
     if (error.message?.includes('429') || error.message?.includes('quota')) {
       throw new AppError(
         StatusCodes.TOO_MANY_REQUESTS,
-        'Gemini API quota exceeded. Please try again later or check your billing.'
-      );
-    } else if (error.message?.includes('404')) {
-      throw new AppError(
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        'Gemini model not available. Please contact support.'
+        'Groq API quota exceeded. Please try again later.'
       );
     }
 
@@ -363,8 +357,8 @@ Please provide an improved version of the question maintaining the same structur
   }
 };
 
-export const GeminiService = {
-  geminiGenerateQuiz,
-  geminiGenerateSingleQuestion,
-  geminiImproveQuestion,
+export const GroqService = {
+  groqGenerateQuiz,
+  groqGenerateSingleQuestion,
+  groqImproveQuestion,
 };

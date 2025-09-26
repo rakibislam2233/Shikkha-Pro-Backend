@@ -75,7 +75,7 @@ export type Difficulty = QuizDifficulty;
 export type QuizLanguage = 'english' | 'bengali' | 'hindi';
 export type Language = QuizLanguage;
 
-export type AIProvider = 'openai' | 'gemini';
+export type AIProvider = 'gemini';
 
 export interface QuizConfig {
   academicLevel: AcademicLevel;
@@ -230,7 +230,6 @@ export interface IGenerateQuizRequest {
   questionCount: number;
   timeLimit?: number;
   instructions?: string;
-  aiProvider?: AIProvider;
 }
 
 export interface ICreateQuizRequest {
