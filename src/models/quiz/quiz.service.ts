@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import { Quiz } from "./quiz.model";
 import { QuizAttempt } from "../quizAttempt/quizAttempt.model";
-import { GroqService } from "../../services/groq.service";
+// import { GroqService } from "../../services/groq.service";
 import {
   IQuiz,
   IGenerateQuizRequest,
@@ -19,6 +19,7 @@ import {
 } from "../quizAttempt/quizAttempt.interface";
 import ApiError from "../../errors/AppErro";
 import { IPaginateOptions, IPaginateResult } from "../../types/paginate";
+import { GeminiService } from "../../services/gemini.service";
 
 // Generate quiz
 const generateQuiz = async (
@@ -27,7 +28,7 @@ const generateQuiz = async (
 ): Promise<{ quizId: string }> => {
   try {
     // Use Groq for quiz generation (free alternative to Gemini)
-    const generatedQuestions = await GroqService.groqGenerateQuiz(request);
+    const generatedQuestions = await GeminiService.geminiGenerateQuiz(request);
 
     const quizData: ICreateQuizRequest = {
       title: `${request.subject} - ${request.topic} Quiz`,

@@ -15,10 +15,7 @@ export type AcademicLevel =
   // Secondary Education (Ages 11-16)
   | 'class-6'          // Class 6 (Age 11-12)
   | 'class-7'          // Class 7 (Age 12-13)
-  | 'class-8'          // Class 8 (Age 13-14)
   | 'jsc'              // Junior School Certificate (JSC/JDC)
-  | 'class-9'          // Class 9 (Age 14-15)
-  | 'class-10'         // Class 10 (Age 15-16)
   | 'ssc'              // Secondary School Certificate (SSC)
 
   // Higher Secondary Education (Ages 17-18)

@@ -131,10 +131,7 @@ const formatAcademicLevel = (level: AcademicLevel): string => {
     // Secondary Education
     'class-6': 'Class 6 (Age 11-12)',
     'class-7': 'Class 7 (Age 12-13)',
-    'class-8': 'Class 8 (Age 13-14)',
     'jsc': 'Junior School Certificate - JSC (Age 14)',
-    'class-9': 'Class 9 (Age 14-15)',
-    'class-10': 'Class 10 (Age 15-16)',
     'ssc': 'Secondary School Certificate - SSC (Age 16)',
 
     // Higher Secondary Education
@@ -218,7 +215,7 @@ const geminiGenerateQuiz = async (
 ): Promise<Question[]> => {
   try {
     const genAI = initializeGemini();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const systemPrompt = getSystemPrompt();
     const prompt = buildPrompt(request);
@@ -248,7 +245,13 @@ const geminiGenerateQuiz = async (
     const generatedData = JSON.parse(cleanedResponse);
     return formatQuestions(generatedData.questions, request);
   } catch (error: any) {
-    console.error('Error generating quiz with Gemini:', error);
+    console.error('Gemini API Error Details:', {
+      message: error.message,
+      status: error.status,
+      statusCode: error.statusCode,
+      details: error.details,
+      fullError: error,
+    });
 
     // Better error messages based on the specific error
     if (error.message?.includes('429') || error.message?.includes('quota')) {
@@ -256,15 +259,20 @@ const geminiGenerateQuiz = async (
         StatusCodes.TOO_MANY_REQUESTS,
         'Gemini API quota exceeded. Please try again later or check your billing.'
       );
-    } else if (error.message?.includes('404')) {
+    } else if (error.message?.includes('404') || error.status === 404) {
       throw new AppError(
         StatusCodes.INTERNAL_SERVER_ERROR,
-        'Gemini model not available. Please contact support.'
+        `Gemini model not available. Error: ${error.message}`
       );
-    } else if (error.message?.includes('API key')) {
+    } else if (error.message?.includes('API key') || error.message?.includes('unauthorized') || error.status === 403) {
       throw new AppError(
         StatusCodes.INTERNAL_SERVER_ERROR,
         'Invalid Gemini API key configuration.'
+      );
+    } else if (error.message?.includes('INVALID_ARGUMENT')) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        `Invalid request parameters: ${error.message}`
       );
     }
 
@@ -302,7 +310,7 @@ const geminiImproveQuestion = async (
 ): Promise<Question> => {
   try {
     const genAI = initializeGemini();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const systemPrompt = getSystemPrompt();
     const prompt = `Improve the following quiz question based on the feedback provided:

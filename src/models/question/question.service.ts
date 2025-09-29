@@ -1,14 +1,15 @@
-import { StatusCodes } from 'http-status-codes';
-import { Question } from './question.model';
+import { StatusCodes } from "http-status-codes";
+import { Question } from "./question.model";
 import {
   IQuestion,
   ICreateQuestionRequest,
   IUpdateQuestionRequest,
   IQuestionSearchFilters,
-} from './question.interface';
-import ApiError from '../../errors/AppErro';
-import { IPaginateOptions, IPaginateResult } from '../../types/paginate';
-import { GroqService } from '../../services/groq.service';
+} from "./question.interface";
+import ApiError from "../../errors/AppErro";
+import { IPaginateOptions, IPaginateResult } from "../../types/paginate";
+// import { GroqService } from '../../services/groq.service';
+import { GeminiService } from "../../services/gemini.service";
 
 const createQuestion = async (
   questionData: ICreateQuestionRequest,
@@ -26,12 +27,12 @@ const createQuestion = async (
 
 const getQuestionById = async (questionId: string): Promise<IQuestion> => {
   const question = await Question.findById(questionId).populate(
-    'createdBy',
-    'profile.fullName email'
+    "createdBy",
+    "profile.fullName email"
   );
 
   if (!question) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Question not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, "Question not found");
   }
 
   return question;
@@ -46,14 +47,14 @@ const updateQuestion = async (
   const question = await Question.findById(questionId);
 
   if (!question) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Question not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, "Question not found");
   }
 
   // Only allow the creator or admin to update questions
   if (!isAdmin && question.createdBy.toString() !== userId) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
-      'You can only update your own questions'
+      "You can only update your own questions"
     );
   }
 
@@ -74,14 +75,14 @@ const deleteQuestion = async (
   const question = await Question.findById(questionId);
 
   if (!question) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Question not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, "Question not found");
   }
 
   // Only allow the creator or admin to delete questions
   if (!isAdmin && question.createdBy.toString() !== userId) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
-      'You can only delete your own questions'
+      "You can only delete your own questions"
     );
   }
 
@@ -93,7 +94,7 @@ const getUserQuestions = async (
   options: IPaginateOptions
 ): Promise<IPaginateResult<IQuestion>> => {
   const filter = { createdBy: userId };
-  options.sortBy = options.sortBy || 'createdAt';
+  options.sortBy = options.sortBy || "createdAt";
   return await Question.paginate(filter, options);
 };
 
@@ -101,8 +102,8 @@ const getApprovedQuestions = async (
   options: IPaginateOptions
 ): Promise<IPaginateResult<IQuestion>> => {
   const filter = { isApproved: true };
-  options.populate = [{ path: 'createdBy', select: 'profile.fullName' }];
-  options.sortBy = options.sortBy || 'createdAt';
+  options.populate = [{ path: "createdBy", select: "profile.fullName" }];
+  options.sortBy = options.sortBy || "createdAt";
   return await Question.paginate(filter, options);
 };
 
@@ -150,8 +151,8 @@ const searchQuestions = async (
       ...(filters.dateRange.to && { $lte: new Date(filters.dateRange.to) }),
     };
   }
-  options.populate = [{ path: 'createdBy', select: 'profile.fullName' }];
-  options.sortBy = options.sortBy || 'createdAt';
+  options.populate = [{ path: "createdBy", select: "profile.fullName" }];
+  options.sortBy = options.sortBy || "createdAt";
   return await Question.paginate(query, options);
 };
 
@@ -162,7 +163,7 @@ const approveQuestion = async (
   const question = await Question.findById(questionId);
 
   if (!question) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Question not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, "Question not found");
   }
 
   question.isApproved = isApproved;
@@ -187,7 +188,7 @@ const generateQuestion = async (
   userId: string
 ): Promise<IQuestion> => {
   try {
-    const generatedQuestion = await GroqService.groqGenerateSingleQuestion(
+    const generatedQuestion = await GeminiService.geminiGenerateSingleQuestion(
       subject,
       topic,
       academicLevel,
@@ -214,7 +215,7 @@ const generateQuestion = async (
 
     return await createQuestion(questionData, userId);
   } catch (error) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to generate question');
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Failed to generate question");
   }
 };
 
@@ -226,18 +227,18 @@ const improveQuestion = async (
   const question = await Question.findById(questionId);
 
   if (!question) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Question not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, "Question not found");
   }
 
   if (question.createdBy.toString() !== userId) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
-      'You can only improve your own questions'
+      "You can only improve your own questions"
     );
   }
 
   try {
-    const improvedQuestion = await GroqService.groqImproveQuestion(
+    const improvedQuestion = await GeminiService.geminiImproveQuestion(
       {
         id: question._id.toString(),
         question: question.question,
@@ -264,7 +265,7 @@ const improveQuestion = async (
 
     return await question.save();
   } catch (error) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to improve question');
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Failed to improve question");
   }
 };
 
@@ -279,31 +280,31 @@ const getQuestionStats = async (): Promise<any> => {
         _id: null,
         totalQuestions: { $sum: 1 },
         approvedQuestions: {
-          $sum: { $cond: [{ $eq: ['$isApproved', true] }, 1, 0] },
+          $sum: { $cond: [{ $eq: ["$isApproved", true] }, 1, 0] },
         },
         pendingApproval: {
-          $sum: { $cond: [{ $eq: ['$isApproved', false] }, 1, 0] },
+          $sum: { $cond: [{ $eq: ["$isApproved", false] }, 1, 0] },
         },
-        averageUsage: { $avg: '$usageCount' },
-        subjectDistribution: { $addToSet: '$subject' },
-        difficultyDistribution: { $push: '$difficulty' },
-        typeDistribution: { $push: '$type' },
+        averageUsage: { $avg: "$usageCount" },
+        subjectDistribution: { $addToSet: "$subject" },
+        difficultyDistribution: { $push: "$difficulty" },
+        typeDistribution: { $push: "$type" },
       },
     },
   ]);
 
   const subjectStats = await Question.aggregate([
-    { $group: { _id: '$subject', count: { $sum: 1 } } },
+    { $group: { _id: "$subject", count: { $sum: 1 } } },
     { $sort: { count: -1 } },
   ]);
 
   const difficultyStats = await Question.aggregate([
-    { $group: { _id: '$difficulty', count: { $sum: 1 } } },
+    { $group: { _id: "$difficulty", count: { $sum: 1 } } },
     { $sort: { count: -1 } },
   ]);
 
   const typeStats = await Question.aggregate([
-    { $group: { _id: '$type', count: { $sum: 1 } } },
+    { $group: { _id: "$type", count: { $sum: 1 } } },
     { $sort: { count: -1 } },
   ]);
 
