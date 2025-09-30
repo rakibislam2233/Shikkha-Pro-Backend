@@ -14,7 +14,10 @@ const socket = (io: Server) => {
   io.on('connection', (socket: Socket) => {
     socket.on('user-connected', (userId: string) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        logger.error(colors.red(`Invalid user ID: ${userId}`));
+        // Only log errors in development to reduce log volume
+        if (process.env.NODE_ENV === 'development') {
+          logger.error(colors.red(`Invalid user ID: ${userId}`));
+        }
         return;
       }
 
@@ -24,7 +27,9 @@ const socket = (io: Server) => {
 
     socket.on('user/connect', async ({ userId }) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        logger.error(colors.red(`Invalid user ID: ${userId}`));
+        if (process.env.NODE_ENV === 'development') {
+          logger.error(colors.red(`Invalid user ID: ${userId}`));
+        }
         return;
       }
       try {
@@ -33,12 +38,15 @@ const socket = (io: Server) => {
         await User.updateOne({ _id: userId }, { $set: { isOnline: true } });
         socket.broadcast.emit('user/connect', userId);
       } catch (error) {
+        // Only log critical errors
         logger.error(colors.red(`Error in user/connect: ${error}`));
       }
     });
     socket.on('user/connectInMessageBox', async ({ userId }) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        logger.error(colors.red(`Invalid user ID: ${userId}`));
+        if (process.env.NODE_ENV === 'development') {
+          logger.error(colors.red(`Invalid user ID: ${userId}`));
+        }
         return;
       }
 
@@ -49,13 +57,16 @@ const socket = (io: Server) => {
           { $set: { isInMessageBox: true } }
         );
       } catch (error) {
+        // Only log critical errors
         logger.error(colors.red(`Error in user/connectInMessageBox: ${error}`));
       }
     });
 
     socket.on('user/disconnectInMessageBox', async ({ userId }) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        logger.error(colors.red(`Invalid user ID: ${userId}`));
+        if (process.env.NODE_ENV === 'development') {
+          logger.error(colors.red(`Invalid user ID: ${userId}`));
+        }
         return;
       }
 
@@ -66,6 +77,7 @@ const socket = (io: Server) => {
           { $set: { isInMessageBox: false } }
         );
       } catch (error) {
+        // Only log critical errors
         logger.error(
           colors.red(`Error in user/disconnectInMessageBox: ${error}`)
         );
@@ -83,6 +95,7 @@ const socket = (io: Server) => {
         );
         socket.broadcast.emit('user/disconnect', socket.userId);
       } catch (error) {
+        // Only log critical errors
         logger.error(colors.red(`Error in handleDisconnect: ${error}`));
       }
     };

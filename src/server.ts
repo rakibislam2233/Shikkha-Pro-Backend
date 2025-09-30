@@ -30,21 +30,30 @@ const connectToDatabase = async (): Promise<void> => {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
       family: 4,
+      // Disable MongoDB driver verbose logging
+      // @ts-ignore - MongoDB driver options
+      loggerLevel: 'error', // Only log errors
+      minPoolSize: 2, // Maintain minimum connections
+      maxIdleTimeMS: 30000, // Close idle connections after 30s
     });
     logger.info('🚀 Database connected successfully');
 
     // Set up mongoose connection event listeners
+    // Only log critical errors to reduce log volume
     mongoose.connection.on('error', error => {
       errorLogger.error('MongoDB connection error:', error);
     });
 
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB disconnected');
-    });
+    // Disable disconnected/reconnected logs in production to reduce volume
+    if (process.env.NODE_ENV === 'development') {
+      mongoose.connection.on('disconnected', () => {
+        logger.warn('MongoDB disconnected');
+      });
 
-    mongoose.connection.on('reconnected', () => {
-      logger.info('MongoDB reconnected');
-    });
+      mongoose.connection.on('reconnected', () => {
+        logger.info('MongoDB reconnected');
+      });
+    }
   } catch (error) {
     errorLogger.error('🤢 Failed to connect to Database', error);
     throw error;

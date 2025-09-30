@@ -1,7 +1,6 @@
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import csrf from 'csurf';
 import express, { NextFunction, Request, Response } from 'express';
 import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
@@ -62,7 +61,10 @@ const getCorsOptions = (allowedOrigins: string[]) => {
         return callback(null, true);
       }
 
-      console.log('CORS blocked origin:', origin);
+      // Only log CORS blocks in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('CORS blocked origin:', origin);
+      }
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -105,24 +107,6 @@ const getRateLimiter = () => {
   });
 };
 
-/**
- * Configure CSRF protection
- */
-const getCsrfProtection = () => {
-  const ignoreMethods =
-    process.env.NODE_ENV === 'development'
-      ? ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'POST', 'PATCH', 'PUT']
-      : ['GET', 'HEAD', 'OPTIONS'];
-
-  return csrf({
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    },
-    ignoreMethods,
-  });
-};
 
 /**
  * Configure Helmet security headers
@@ -196,9 +180,7 @@ const getAdditionalSecurityHeaders = () => {
 const getMongoSanitizeConfig = () => {
   return mongoSanitize({
     replaceWith: '_',
-    onSanitize: ({ req, key }) => {
-      console.warn(`Sanitized key: ${key} in request from ${req.ip}`);
-    },
+    // Removed onSanitize logging to reduce log volume
   });
 };
 
@@ -212,9 +194,14 @@ const getHppConfig = () => {
 };
 
 /**
- * Log suspicious activity patterns
+ * Log suspicious activity patterns (only in production)
  */
 const logSuspiciousActivity = (req: Request, ip: string | undefined): void => {
+  // Only check for suspicious patterns in production to reduce log volume
+  if (process.env.NODE_ENV !== 'production') {
+    return;
+  }
+
   const bodyStr = JSON.stringify(req.body);
   const suspiciousPatterns = [
     /<script/i,
@@ -236,21 +223,32 @@ const logSuspiciousActivity = (req: Request, ip: string | undefined): void => {
 };
 
 /**
- * Configure security logging middleware
+ * Configure security logging middleware (production only)
  */
 const getSecurityLoggingMiddleware = () => {
   return (req: Request, res: Response, next: NextFunction) => {
+    // Only log in production and skip health/test endpoints
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      req.path === '/test' ||
+      req.path === '/health'
+    ) {
+      return next();
+    }
+
     const timestamp = new Date().toISOString();
     const ip = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('User-Agent');
     const origin = req.get('Origin');
 
-    // Log security-relevant information
-    console.log(
-      `${timestamp} - ${req.method} ${
-        req.url
-      } - IP: ${ip} - Origin: ${origin} - UA: ${userAgent?.substring(0, 100)}`
-    );
+    // Only log non-GET requests to reduce volume
+    if (req.method !== 'GET') {
+      console.log(
+        `${timestamp} - ${req.method} ${
+          req.url
+        } - IP: ${ip} - Origin: ${origin} - UA: ${userAgent?.substring(0, 100)}`
+      );
+    }
 
     // Log suspicious activities
     if (req.body && typeof req.body === 'object') {
@@ -353,11 +351,6 @@ app.use(i18nextMiddleware.handle(i18next));
 
 // Rate limiting
 app.use(getRateLimiter());
-
-// CSRF Protection
-if (process.env.NODE_ENV === 'development') {
-  app.use(getCsrfProtection());
-}
 
 // Helmet security headers
 app.use(getHelmetConfig(allowedOrigins));
