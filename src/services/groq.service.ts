@@ -133,10 +133,7 @@ const formatAcademicLevel = (level: AcademicLevel): string => {
     // Secondary Education
     'class-6': 'Class 6 (Age 11-12)',
     'class-7': 'Class 7 (Age 12-13)',
-    'class-8': 'Class 8 (Age 13-14)',
     'jsc': 'Junior School Certificate - JSC (Age 14)',
-    'class-9': 'Class 9 (Age 14-15)',
-    'class-10': 'Class 10 (Age 15-16)',
     'ssc': 'Secondary School Certificate - SSC (Age 16)',
 
     // Higher Secondary Education
