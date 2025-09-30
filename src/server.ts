@@ -30,9 +30,6 @@ const connectToDatabase = async (): Promise<void> => {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
       family: 4,
-      // Disable MongoDB driver verbose logging
-      // @ts-ignore - MongoDB driver options
-      loggerLevel: 'error', // Only log errors
       minPoolSize: 2, // Maintain minimum connections
       maxIdleTimeMS: 30000, // Close idle connections after 30s
     });
