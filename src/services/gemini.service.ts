@@ -225,8 +225,7 @@ const geminiGenerateQuiz = async (
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const responseText = response.text();
-
-    console.log('Gemini Response: ', responseText);
+responseText
 
     if (!responseText) {
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'No response from Gemini');
