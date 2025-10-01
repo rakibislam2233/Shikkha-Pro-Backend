@@ -19,7 +19,7 @@ if (config.environment !== 'test') {
   transporter
     .verify()
     .then(() => logger.info(colors.cyan('📧  Connected to email server')))
-    .catch(err =>
+    .catch((err: Error) =>
       logger.warn(
         'Unable to connect to email server. Make sure you have configured the SMTP options in .env'
       )
