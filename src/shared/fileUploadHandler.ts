@@ -19,10 +19,10 @@ const fileUploadHandler = (UPLOADS_FOLDER: string) => {
 
   // Configure multer storage
   const storage: StorageEngine = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
       cb(null, UPLOADS_FOLDER); // Use the provided destination folder
     },
-    filename: (req, file, cb) => {
+    filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
       const fileExt = path.extname(file.originalname).toLowerCase();
       const filename = `${uuidv4()}${fileExt}`; // Use UUID for unique filename
       cb(null, filename);

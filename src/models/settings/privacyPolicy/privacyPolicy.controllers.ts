@@ -1,9 +1,10 @@
+import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { PrivacyPolicyService } from './privacyPolicy.service';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 
-const createOrUpdatePrivacyPolicy = catchAsync(async (req, res, next) => {
+const createOrUpdatePrivacyPolicy = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const result = await PrivacyPolicyService.createOrUpdatePrivacyPolicy(
     req.body
   );
@@ -14,7 +15,7 @@ const createOrUpdatePrivacyPolicy = catchAsync(async (req, res, next) => {
   });
 });
 
-const getPrivacyPolicy = catchAsync(async (req, res, next) => {
+const getPrivacyPolicy = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const result = await PrivacyPolicyService.getPrivacyPolicy();
   sendResponse(res, {
     code: StatusCodes.OK,

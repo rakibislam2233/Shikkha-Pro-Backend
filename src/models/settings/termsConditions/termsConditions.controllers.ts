@@ -1,9 +1,10 @@
+import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { TermsConditionsService } from './termsConditions.service';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 
-const createOrUpdateTermsConditions = catchAsync(async (req, res, next) => {
+const createOrUpdateTermsConditions = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const result = await TermsConditionsService.createOrUpdateTermsConditions(
     req.body
   );
@@ -14,7 +15,7 @@ const createOrUpdateTermsConditions = catchAsync(async (req, res, next) => {
   });
 });
 
-const getTermsConditions = catchAsync(async (req, res, next) => {
+const getTermsConditions = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const result = await TermsConditionsService.getTermsConditions();
   sendResponse(res, {
     code: StatusCodes.OK,

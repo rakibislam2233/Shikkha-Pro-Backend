@@ -332,7 +332,7 @@ app.use(
     res.header('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   },
-  express.static(path.join(__dirname, '../Uploads/'))
+  express.static(path.join(__dirname, '../uploads/'))
 );
 
 // Serve static assets

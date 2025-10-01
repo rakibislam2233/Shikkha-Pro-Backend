@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
@@ -5,7 +6,7 @@ import { UserService } from './user.service';
 import pick from '../../shared/pick';
 import { USER_UPLOAD_FOLDER } from './user.constant';
 
-const getAllUsers = catchAsync(async (req, res) => {
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const filters = pick(req.query, ['role', 'status', 'searchTerm']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'populate']);
   const users = await UserService.getAllUsers(filters, options);
@@ -16,7 +17,7 @@ const getAllUsers = catchAsync(async (req, res) => {
   });
 });
 
-const getUserById = catchAsync(async (req, res) => {
+const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = await UserService.getUserById(id);
   sendResponse(res, {
@@ -25,7 +26,7 @@ const getUserById = catchAsync(async (req, res) => {
     data: user,
   });
 });
-const updateUserStatus = catchAsync(async (req, res) => {
+const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
   const user = await UserService.updateUserStatus(id, status);
@@ -36,7 +37,7 @@ const updateUserStatus = catchAsync(async (req, res) => {
   });
 });
 
-const getDashboardOverview = catchAsync(async (req, res) => {
+const getDashboardOverview = catchAsync(async (req: Request, res: Response) => {
   const data = await UserService.getDashboardOverview();
   sendResponse(res, {
     code: StatusCodes.OK,
@@ -44,7 +45,7 @@ const getDashboardOverview = catchAsync(async (req, res) => {
     data,
   });
 });
-const userActivityGraphChart = catchAsync(async (req, res) => {
+const userActivityGraphChart = catchAsync(async (req: Request, res: Response) => {
   const { period } = req.query as { period: 'weekly' | 'monthly' | 'yearly' };
   const data = await UserService.userActivityGraphChart(period);
   sendResponse(res, {
@@ -54,7 +55,7 @@ const userActivityGraphChart = catchAsync(async (req, res) => {
   });
 });
 
-const getMyProfile = catchAsync(async (req, res) => {
+const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
   const user = await UserService.getMyProfile(userId);
   sendResponse(res, {
@@ -64,7 +65,7 @@ const getMyProfile = catchAsync(async (req, res) => {
   });
 });
 
-const updateMyProfile = catchAsync(async (req, res) => {
+const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
   const updateData = req?.body;
   const user = await UserService.updateMyProfile(userId, updateData);
@@ -74,7 +75,7 @@ const updateMyProfile = catchAsync(async (req, res) => {
     data: user,
   });
 });
-const uploadProfileImage = catchAsync(async (req, res) => {
+const uploadProfileImage = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
 
   if (!req.file) {
@@ -95,7 +96,7 @@ const uploadProfileImage = catchAsync(async (req, res) => {
     data: result,
   });
 });
-const deleteMyProfile = catchAsync(async (req, res) => {
+const deleteMyProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
   await UserService.deleteMyProfile(userId);
   sendResponse(res, {

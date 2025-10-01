@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../shared/catchAsync';
 import pick from '../../shared/pick';
@@ -6,7 +6,7 @@ import sendResponse from '../../shared/sendResponse';
 import { QuizServices } from './quiz.service';
 
 // generate quiz for all authorized users
-const generateQuiz = catchAsync(async (req, res) => {
+const generateQuiz = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
   if (!userId) {
     return sendResponse(res, {
@@ -24,7 +24,7 @@ const generateQuiz = catchAsync(async (req, res) => {
 });
 
 // not implemented yet
-const createQuiz = catchAsync(async (req, res) => {
+const createQuiz = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req?.user;
   if (!userId) {
     return sendResponse(res, {
@@ -43,7 +43,7 @@ const createQuiz = catchAsync(async (req, res) => {
 });
 
 // get specific user single quiz
-const getQuizById = catchAsync(async (req, res) => {
+const getQuizById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.user;
   if (!userId) {
@@ -63,7 +63,7 @@ const getQuizById = catchAsync(async (req, res) => {
 });
 
 // update specific user single quiz
-const updateQuiz = catchAsync(async (req, res) => {
+const updateQuiz = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.user;
 
@@ -84,7 +84,7 @@ const updateQuiz = catchAsync(async (req, res) => {
 });
 
 // delete specific user single quiz
-const deleteQuiz = catchAsync(async (req, res) => {
+const deleteQuiz = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req?.user;
 
@@ -104,7 +104,7 @@ const deleteQuiz = catchAsync(async (req, res) => {
 });
 
 // get all user quizzes
-const getUserQuizzes = catchAsync(async (req, res) => {
+const getUserQuizzes = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
   if (!userId) {
     return sendResponse(res, {
@@ -132,7 +132,7 @@ const getUserQuizzes = catchAsync(async (req, res) => {
   });
 });
 
-const submitAnswer = catchAsync(async (req, res) => {
+const submitAnswer = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req?.user;
 
   if (!userId) {
@@ -151,7 +151,7 @@ const submitAnswer = catchAsync(async (req, res) => {
   });
 });
 
-const startQuiz = catchAsync(async (req, res) => {
+const startQuiz = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req?.user;
   const { quizId } = req.body;
 
@@ -169,7 +169,7 @@ const startQuiz = catchAsync(async (req, res) => {
   });
 });
 
-const submitQuizAnswer = catchAsync(async (req, res) => {
+const submitQuizAnswer = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req?.user;
 
   if (!userId) {
@@ -188,7 +188,7 @@ const submitQuizAnswer = catchAsync(async (req, res) => {
   });
 });
 
-const getQuizResult = catchAsync(async (req, res) => {
+const getQuizResult = catchAsync(async (req: Request, res: Response) => {
   const { attemptId } = req.params;
   const { userId } = req?.user;
 
@@ -208,7 +208,7 @@ const getQuizResult = catchAsync(async (req, res) => {
   });
 });
 
-const getUserStats = catchAsync(async (req, res) => {
+const getUserStats = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req?.user;
 
   if (!userId) {
@@ -227,7 +227,7 @@ const getUserStats = catchAsync(async (req, res) => {
   });
 });
 
-const getLeaderboard = catchAsync(async (req: Request, res) => {
+const getLeaderboard = catchAsync(async (req: Request, res: Response) => {
   const { quizId } = req.query;
   const limit = parseInt(req.query.limit as string) || 10;
 
