@@ -9,10 +9,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/server.js"
+      "dest": "dist/vercel.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

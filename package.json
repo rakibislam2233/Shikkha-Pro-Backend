@@ -6,19 +6,7 @@
   "scripts": {
     "build": "tsc",
     "vercel-build": "npm run build",
-    "start": "node dist/server.js",
-    "seeder": "ts-node src/utils/seeder.ts",
-    "seed:flights": "ts-node src/scripts/seedFlightData.ts",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "lint:check": "eslint --ignore-path .eslintignore --ext .js,.ts",
-    "lint:fix": "lint . --fix",
-    "prettier:check": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-    "prettier:fix": "prettier --write .",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "logs:clean": "node cleanup-logs-now.js",
-    "logs:test": "node test-log-cleanup.js"
+    "start": "node ./dist/server.js"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
